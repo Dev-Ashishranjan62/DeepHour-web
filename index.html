@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deep Hour</title>
+<meta name="theme-color" content="#2D6A4F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>:root{color-scheme:light dark}html,body{margin:0}body{font-size:14px}[hidden]{display:none!important}</style>
+<style>
+/* Layout: one phone-first column, five tabs on a bottom bar; a large ring timer is the centre of the Focus tab. */
+:root{
+  --bg:#EDF0EA; --surface:#F8FAF6; --soft:#DDE7DC; --ink:#17241C; --muted:#5C6B61; --line:#D2DACF;
+  --accent:#2D6A4F; --accent-ink:#FFFFFF; --break:#B0681A; --warn:#B3392F; --pot:#9A6B4B;
+  --f-display:'Bricolage Grotesque','Trebuchet MS',sans-serif;
+  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1612; --surface:#17211B; --soft:#1F2D24; --ink:#E6EEE7; --muted:#93A598; --line:#26352B;
+  --accent:#6FCF97; --accent-ink:#0B1A11; --break:#E0A24E; --warn:#EF7A6F; --pot:#B98763; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1612; --surface:#17211B; --soft:#1F2D24; --ink:#E6EEE7; --muted:#93A598; --line:#26352B;
+  --accent:#6FCF97; --accent-ink:#0B1A11; --break:#E0A24E; --warn:#EF7A6F; --pot:#B98763; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+#app{max-width:720px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 8px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:-.01em}
+.brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--muted);letter-spacing:0}
+h2{font-family:var(--f-display);font-size:20px;margin:0 0 10px;text-wrap:balance}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;font-weight:700}
+.stack{display:flex;flex-direction:column;gap:14px;padding-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.sp{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0;max-width:100%}
+input[type=range]{padding:0;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:20px;height:20px}
+textarea{width:100%;resize:vertical}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:500}
+.btn:hover{background:var(--soft)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--warn);border-color:var(--warn);background:transparent}
+.btn.big{padding:14px 22px;font-size:17px;border-radius:12px}
+.btn.sm{padding:5px 10px;font-size:13px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:var(--soft);color:var(--muted)}
+.pill.high{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.pill.med{border:1px solid var(--break);color:var(--break);background:transparent}
+.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.done .t{text-decoration:line-through;color:var(--muted)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));z-index:5}
+nav div{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+nav button{border:0;background:none;padding:8px 2px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500}
+nav button[aria-current=true]{background:var(--soft);color:var(--ink);font-weight:700}
+.ringwrap{position:relative;width:min(78vw,300px);aspect-ratio:1;margin:6px auto}
+.ringwrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringwrap .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:0 24px}
+#clock{font-family:var(--f-mono);font-weight:700;font-size:clamp(40px,13vw,58px);letter-spacing:-.02em}
+.phase{font-size:13px;text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+.phase.focus{color:var(--accent)} .phase.break{color:var(--break)}
+.shield{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:3px 10px;border-radius:99px;background:var(--soft);font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.chip.off{text-decoration:line-through;color:var(--muted)}
+.chip button{border:0;background:none;cursor:pointer;color:var(--muted);padding:0}
+.stat{display:flex;flex-direction:column}
+.stat b{font-family:var(--f-mono);font-size:26px;line-height:1.1}
+.stat span{font-size:13px;color:var(--muted)}
+svg text{fill:var(--muted);font-family:var(--f-body);font-size:11px}
+.badge{display:flex;gap:10px;align-items:center;padding:8px 0}
+.badge .dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--soft);color:var(--muted);flex:none}
+.badge.on .dot{background:var(--accent);color:var(--accent-ink)}
+.badge:not(.on){opacity:.6}
+#modal{position:fixed;inset:0;background:rgba(10,18,13,.6);display:grid;place-items:center;padding:20px;z-index:20}
+#modal .card{max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);
+  padding:10px 16px;border-radius:99px;font-size:14px;z-index:30;max-width:90vw;text-align:center}
+.warnbar{background:transparent;border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:10px 12px;font-weight:500}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:6px 12px;cursor:pointer;font-size:14px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+label.f input,label.f select{color:var(--ink);font-size:15px}
+.zen #app>header,.zen nav{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">Deep Hour<small id="date"></small></div>
+    <div class="row">
+      <button class="btn sm" data-act="theme" id="themeBtn" aria-label="Change theme">Theme: auto</button>
+    </div>
+  </header>
+  <main id="view" class="stack"></main>
+</div>
+<nav><div id="nav"></div></nav>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var K='deephour.v1';
+var $=function(s){return document.querySelector(s)};
+var pad=function(n){return String(n).padStart(2,'0')};
+var dayKey=function(d){d=d||new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var uid=function(){return Date.now()+Math.floor(Math.random()*1000)};
+
+/* ---------- state ---------- */
+function defaults(){
+  return {
+    schedule:[{id:1,title:'Sample: Study block',time:'09:00',end:'11:00',days:'daily',last:'',pre:''}],
+    tasks:[
+      {id:2,title:'Sample: Revise JavaScript notes',pri:'high',due:dayKey(),done:false,mins:0},
+      {id:3,title:'Sample: Finish one Node.js exercise',pri:'med',due:'',done:false,mins:0}],
+    habits:[{id:4,name:'Sample: Read 10 pages',log:{}}],
+    sessions:[],exits:[],journal:[],xp:0,earned:[],
+    settings:{focus:60,brk:10,goal:240,lead:5,strict:true,voice:true,notify:true,keep:true,sound:'off',vol:0.4,theme:'auto',
+      apps:['Instagram','YouTube','WhatsApp','Games'],sites:['youtube.com','instagram.com','x.com']}
+  };
+}
+var S=load();
+function load(){
+  var d=defaults();
+  try{var r=localStorage.getItem(K);if(r){var p=JSON.parse(r);Object.keys(p).forEach(function(k){d[k]=p[k]});d.settings=Object.assign(defaults().settings,p.settings||{});d.schedule.forEach(function(it){if(!it.end){var m=(+it.time.split(':')[0]*60+ +it.time.split(':')[1]+60)%1440;it.end=pad(Math.floor(m/60))+':'+pad(m%60)}})}}catch(e){}
+  return d;
+}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+
+var tab='home', run=null, promptOpen=false, warn='';
+var TABS=[['home','Home'],['focus','Focus'],['plan','Plan'],['stats','Stats'],['settings','Settings']];
+
+/* ---------- audio, voice, notifications ---------- */
+var ac,master,cur=[];
+function ctx(){
+  if(!ac){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ac=new C();master=ac.createGain();master.connect(ac.destination)}
+  if(ac.state==='suspended')ac.resume();
+  return ac;
+}
+function chime(){
+  var c=ctx();if(!c)return;
+  [880,1318].forEach(function(f,i){
+    var o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
+    var t=c.currentTime+i*0.18;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.25,t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
+    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.8);
+  });
+}
+function speak(text){
+  chime();
+  if(!S.settings.voice||!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.rate=0.95;speechSynthesis.speak(u)}catch(e){}
+}
+function notify(title,body){
+  if(!S.settings.notify||!('Notification' in window)||Notification.permission!=='granted')return;
+  try{new Notification(title,{body:body})}catch(e){}
+}
+function noise(kind){
+  var c=ac,n=c.sampleRate*3,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0),last=0;
+  for(var i=0;i<n;i++){var w=Math.random()*2-1;if(kind==='brown'){last=(last+0.02*w)/1.02;d[i]=last*3.5}else d[i]=w*0.6}
+  var s=c.createBufferSource();s.buffer=b;s.loop=true;return s;
+}
+function stopSound(){cur.forEach(function(n){try{if(n.stop)n.stop()}catch(e){}try{n.disconnect()}catch(e){}});cur=[]}
+function setSound(name){
+  stopSound();S.settings.sound=name;save();
+  if(name==='off')return;
+  var c=ctx();if(!c)return;
+  master.gain.value=S.settings.vol;
+  var g=c.createGain(),src,f;
+  if(name==='rain'){src=noise('white');f=c.createBiquadFilter();f.type='highpass';f.frequency.value=900;var l=c.createBiquadFilter();l.type='lowpass';l.frequency.value=7000;src.connect(f);f.connect(l);l.connect(g);g.gain.value=0.5;cur.push(src,f,l,g)}
+  else if(name==='white'){src=noise('white');src.connect(g);g.gain.value=0.35;cur.push(src,g)}
+  else if(name==='brown'){src=noise('brown');src.connect(g);g.gain.value=0.8;cur.push(src,g)}
+  else if(name==='nature'){src=noise('brown');f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=700;src.connect(f);f.connect(g);g.gain.value=0.6;
+    var lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=0.13;lg.gain.value=0.3;lfo.connect(lg);lg.connect(g.gain);lfo.start();cur.push(src,f,g,lfo,lg)}
+  else if(name==='pad'){
+    f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=900;f.connect(g);g.gain.value=0.5;cur.push(f,g);
+    [110,164.8,220,261.6].forEach(function(fr,i){var o=c.createOscillator(),og=c.createGain();o.type='sine';o.frequency.value=fr;og.gain.value=0.12;
+      var l2=c.createOscillator(),lg2=c.createGain();l2.frequency.value=0.05+i*0.03;lg2.gain.value=0.08;l2.connect(lg2);lg2.connect(og.gain);
+      o.connect(og);og.connect(f);o.start();l2.start();cur.push(o,og,l2,lg2)});
+  }
+  g.connect(master);if(src)src.start();
+}
+
+/* ---------- derived stats ---------- */
+function focusMinOn(key){return S.sessions.filter(function(s){return dayKey(new Date(s.t))===key}).reduce(function(a,s){return a+s.min},0)}
+function streak(){
+  var days={};S.sessions.forEach(function(s){days[dayKey(new Date(s.t))]=1});
+  var d=new Date(),n=0;if(!days[dayKey(d)])d.setDate(d.getDate()-1);
+  while(days[dayKey(d)]){n++;d.setDate(d.getDate()-1)}return n;
+}
+function level(){return 1+Math.floor(S.xp/300)}
+function totalMin(){return S.sessions.reduce(function(a,s){return a+s.min},0)}
+function badgeList(){
+  var st=streak(),done=S.tasks.filter(function(t){return t.done}).length;
+  var early=S.sessions.some(function(s){return new Date(s.t-s.min*60000).getHours()<7});
+  var night=S.sessions.some(function(s){return new Date(s.t-s.min*60000).getHours()>=22});
+  return [
+    ['first','First hour','1','Finish one focus session',S.sessions.length>=1],
+    ['s3','3-day streak','3','Focus three days in a row',st>=3],
+    ['s7','7-day streak','7','Focus seven days in a row',st>=7],
+    ['h10','10 hours','10','Reach 10 focused hours',totalMin()>=600],
+    ['t5','Task finisher','5','Complete five tasks',done>=5],
+    ['early','Early bird','AM','Start a session before 7 AM',early],
+    ['night','Night owl','PM','Start a session after 10 PM',night]
+  ];
+}
+function checkBadges(){
+  badgeList().forEach(function(b){if(b[4]&&S.earned.indexOf(b[0])<0){S.earned.push(b[0]);toast('Badge earned: '+b[1])}});
+}
+function recommend(){
+  var wk=Date.now()-7*864e5,ok=S.sessions.filter(function(s){return s.t>wk}).length,ex=S.exits.filter(function(s){return s>wk}).length;
+  if(ok+ex<3)return null;
+  var r=ex/(ok+ex);
+  return r>0.3?{min:30,why:'You left '+ex+' of your last '+(ok+ex)+' sessions early. Shorter blocks may help.'}:{min:60,why:'You finished '+ok+' of '+(ok+ex)+' sessions this week. Full hours suit you.'};
+}
+
+/* ---------- session engine ---------- */
+function startFocus(subject,taskId,cycle,windowEnd,intro){
+  var now=Date.now(),rem=windowEnd-now;
+  if(rem<60000){finishWindow((intro||'')+'Your study time is over.');return}
+  var ms=Math.min(S.settings.focus*60000,rem),leaves=run?run.leaves:0;
+  run={phase:'focus',total:ms,endAt:now+ms,paused:false,left:0,cycle:cycle||1,subject:subject||'Focus',taskId:taskId||null,leaves:leaves,leftAt:0,startedAt:now,windowEnd:windowEnd};
+  tab='focus';warn='';
+  speak((intro||'')+'Focus time started. '+run.subject);
+  keepAwake();render();
+}
+function finishWindow(msg){
+  run=null;releaseAwake();speak(msg);notify('Study session finished','Well done.');toast('Study session finished. Well done.');render();
+}
+function advance(){
+  var now=Date.now();
+  if(run.phase==='focus'){
+    var min=Math.max(1,Math.round((now-run.startedAt)/60000));
+    if(S.settings.keep)S.sessions.push({t:now,min:min,subject:run.subject,leaves:run.leaves});
+    S.xp+=min;
+    if(run.taskId){var t=S.tasks.filter(function(x){return x.id===run.taskId})[0];if(t)t.mins+=min}
+    checkBadges();save();
+    var rem=run.windowEnd-now;
+    if(rem<60000){finishWindow('Your study time is over. Well done.');return}
+    var b=Math.min(S.settings.brk*60000,rem);
+    run.phase='break';run.total=b;run.endAt=now+b;
+    speak('Your break has started.');notify('Break time','Your break has started. Apps are open.');
+  }else if(run.phase==='break'){
+    if(run.windowEnd-now<60000){finishWindow('Your break has ended. Your study time is over. Well done.');return}
+    startFocus(run.subject,run.taskId,run.cycle+1,run.windowEnd,'Your break has ended. ');return;
+  }
+  render();
+}
+function endRun(){run=null;releaseAwake();render()}
+var wl=null;
+function keepAwake(){try{if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').then(function(l){wl=l}).catch(function(){})}catch(e){}}
+function releaseAwake(){try{if(wl)wl.release()}catch(e){}wl=null}
+function fmt(ms){var s=Math.max(0,Math.ceil(ms/1000));return pad(Math.floor(s/60))+':'+pad(s%60)}
+function left(){return run.paused?run.left:run.endAt-Date.now()}
+function tick(){
+  if(!run)return;
+  if(run.phase!=='ready'&&!run.paused&&run.endAt-Date.now()<=0){advance();return}
+  var c=$('#clock');if(!c)return;
+  var l=left();c.textContent=fmt(l);
+  var r=$('#ringfg');if(r){var frac=run.total?Math.min(1,Math.max(0,l/run.total)):0;r.style.strokeDashoffset=(1-frac)*753.98}
+}
+setInterval(tick,250);
+
+/* ---------- schedule ---------- */
+function mins(hm){var p=hm.split(':');return +p[0]*60+ +p[1]}
+function t12(hm){var m=mins(hm),h=Math.floor(m/60),mm=m%60;return (h%12===0?12:h%12)+':'+pad(mm)+' '+(h<12?'AM':'PM')}
+function durMin(it){var d=mins(it.end)-mins(it.time);if(d<=0)d+=1440;return d}
+function durText(it){var d=durMin(it);return Math.floor(d/60)+'h'+(d%60?' '+d%60+'m':'')}
+function clockStr(ms){return new Date(ms).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
+function segs(a,b){var x=mins(a),y=mins(b);return y<=x?[[x,1440],[0,y]]:[[x,y]]}
+function overlap(a,b){var A=segs(a.time,a.end),B=segs(b.time,b.end);return A.some(function(u){return B.some(function(v){return u[0]<v[1]&&v[0]<u[1]})})}
+var pend=null,promptTimers=[];
+function stopPromptTimers(){promptTimers.forEach(function(t){clearInterval(t);clearTimeout(t)});promptTimers=[]}
+function checkSchedule(){
+  if(promptOpen)return;
+  var now=new Date(),nm=now.getHours()*60+now.getMinutes(),today=dayKey(now),dow=now.getDay(),lead=S.settings.lead|0;
+  for(var i=0;i<S.schedule.length;i++){
+    var it=S.schedule[i],st=mins(it.time);
+    if(it.days==='weekdays'&&(dow===0||dow===6))continue;
+    // heads-up a few minutes before the start
+    if(lead>0&&it.pre!==today&&!run){
+      var dPre=((nm-(st-lead))%1440+1440)%1440;
+      if(dPre<=2){
+        it.pre=today;save();
+        speak('Heads up. '+it.title+' starts in '+lead+' minutes. Get ready.');
+        notify('Study starts soon',it.title+' starts in '+lead+' minutes.');
+        toast(it.title+' starts in '+lead+' minutes');
+        return;
+      }
+    }
+    if(it.last===today)continue;
+    var diff=((nm-st)%1440+1440)%1440;
+    if(diff<=2){
+      it.last=today;save();
+      if(run)return;
+      var startMs=now.getTime()-diff*60000-now.getSeconds()*1000-now.getMilliseconds();
+      var endAt=startMs+durMin(it)*60000;
+      pend={id:it.id,end:endAt,title:it.title};
+      promptOpen=true;
+      var text="It is time to start. "+it.title+". Do you want to begin?";
+      speak(text);notify('Time to study',it.title);
+      promptTimers.push(setInterval(function(){speak(text)},60000));
+      promptTimers.push(setTimeout(function(){if(promptOpen){closeModal();toast('No answer. This slot was skipped.')}},180000));
+      modal('<h2>Time to study</h2><p><b>'+esc(it.title)+'</b><br><span class="muted">'+t12(it.time)+' to '+t12(it.end)+'</span></p>'+
+        '<p class="muted">Start now? Press Yes or No, or type your answer.</p>'+
+        '<div class="row"><input id="ans" class="grow" placeholder="type yes or no" autocomplete="off"><button class="btn" data-act="promptType">Send</button></div>'+
+        '<div class="row" style="margin-top:8px"><button class="btn primary big" data-act="promptYes">Yes, start</button><button class="btn big" data-act="promptNo">No</button></div>');
+      return;
+    }
+  }
+}
+setInterval(checkSchedule,5000);
+function nextUp(){
+  var now=new Date(),nm=now.getHours()*60+now.getMinutes(),best=null;
+  S.schedule.forEach(function(it){
+    if(it.days==='weekdays'&&(now.getDay()===0||now.getDay()===6))return;
+    var m=mins(it.time);if(m>nm&&(!best||m<mins(best.time)))best=it;
+  });
+  if(!best)return null;
+  var d=mins(best.time)-nm;return {it:best,txt:(d>=60?Math.floor(d/60)+' h ':'')+(d%60)+' min'};
+}
+
+/* ---------- small ui helpers ---------- */
+function modal(html){var m=$('#modal');m.innerHTML='<div class="card" role="dialog" aria-modal="true">'+html+'</div>';m.hidden=false}
+function closeModal(){$('#modal').hidden=true;promptOpen=false;stopPromptTimers()}
+var tt;function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},4200)}
+
+/* ---------- views ---------- */
+function plant(stage){
+  var h=[0,16,32,48,60][stage],s='<svg viewBox="0 0 120 120" width="110" height="110" role="img" aria-label="Plant growth stage '+stage+' of 4">';
+  s+='<path d="M36 92h48l-6 24H42z" fill="var(--pot)"/><rect x="32" y="88" width="56" height="6" rx="3" fill="var(--pot)"/>';
+  if(stage===0)s+='<ellipse cx="60" cy="88" rx="4" ry="3" fill="var(--muted)"/>';
+  else{
+    s+='<line x1="60" y1="88" x2="60" y2="'+(88-h)+'" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>';
+    for(var i=0;i<stage;i++){var y=88-(i+1)*(h/(stage+0.6)),side=i%2?-1:1;
+      s+='<ellipse cx="'+(60+side*11)+'" cy="'+y+'" rx="11" ry="5" fill="var(--accent)" transform="rotate('+(side*-28)+' '+(60+side*11)+' '+y+')"/>'}
+    if(stage===4){var ty=88-h-4;for(var k=0;k<5;k++){var a=k*72*Math.PI/180;s+='<circle cx="'+(60+Math.cos(a)*8).toFixed(1)+'" cy="'+(ty+Math.sin(a)*8).toFixed(1)+'" r="6" fill="var(--break)"/>'}s+='<circle cx="60" cy="'+ty+'" r="4" fill="var(--surface)"/>'}
+  }
+  return s+'</svg>';
+}
+function homeView(){
+  var today=dayKey(),m=focusMinOn(today),goal=S.settings.goal,frac=Math.min(1,m/goal),stage=m===0?0:Math.min(4,1+Math.floor(frac*3.99));
+  if(frac>=1)stage=4;
+  var nu=nextUp(),rec=recommend(),h='';
+  if(run)h+='<div class="card row sp"><div><b>Session running</b><div class="muted">'+esc(run.subject)+'</div></div><button class="btn primary" data-act="tab" data-t="focus">Open</button></div>';
+  h+='<div class="card"><div class="row sp" style="align-items:flex-start"><div class="grow"><h3>Today</h3><div class="stat"><b>'+Math.floor(m/60)+'h '+pad(m%60)+'m</b><span>of '+Math.floor(goal/60)+'h '+(goal%60?goal%60+'m ':'')+'goal</span></div>'+
+    '<div class="bar" style="margin:12px 0 6px"><i style="width:'+Math.round(frac*100)+'%"></i></div><div class="muted" style="font-size:13px">'+(frac>=1?'Goal reached. Your plant is in bloom.':'Your plant grows as you focus.')+'</div></div>'+plant(stage)+'</div></div>';
+  h+='<div class="grid2"><div class="card stat"><b>'+streak()+'</b><span>day streak</span></div><div class="card stat"><b>Lv '+level()+'</b><span>'+S.xp+' XP</span></div></div>';
+  h+='<div class="card"><h3>Next scheduled</h3>'+(nu?'<div class="row sp"><div><b>'+esc(nu.it.title)+'</b><div class="muted">'+t12(nu.it.time)+' to '+t12(nu.it.end)+' · starts in '+nu.txt+'</div></div><button class="btn" data-act="startSched" data-id="'+nu.it.id+'">Start now</button></div>':'<div class="muted">Nothing left today. Add a session in Plan.</div>')+
+    '<p class="muted" style="font-size:13px;margin:10px 0 0">At the set time the app asks you Yes or No. Keep this page open for reminders.</p></div>';
+  if(rec)h+='<div class="card"><h3>Suggestion</h3><p style="margin:0 0 10px">Try '+rec.min+' minute sessions. '+esc(rec.why)+'</p>'+(S.settings.focus!==rec.min?'<button class="btn sm" data-act="applyRec" data-m="'+rec.min+'">Use '+rec.min+' min</button>':'<span class="pill">Already set</span>')+'</div>';
+  h+='<button class="btn primary big" data-act="quick">Quick focus · '+S.settings.focus+' min</button>';
+  return h;
+}
+function focusView(){
+  var s=S.settings;
+  if(!run){
+    var open=S.tasks.filter(function(t){return !t.done});
+    var opts='<option value="">Free study</option>'+open.map(function(t){return '<option value="'+t.id+'">'+esc(t.title)+'</option>'}).join('');
+    var sounds=[['off','Off'],['rain','Rain'],['nature','Nature'],['white','White noise'],['brown','Deep hum'],['pad','Calm music']];
+    return '<div class="card"><h2>Start a focus session</h2><div class="stack" style="padding:0">'+
+      '<label class="f">What are you studying?<input id="subj" placeholder="e.g. Node.js fs module" maxlength="80"></label>'+
+      '<label class="f">Linked task<select id="taskSel">'+opts+'</select></label>'+
+      '<label class="f">Hours to study<input id="hrs" type="number" min="1" max="16" value="1"></label>'+
+      '<div class="muted">Runs '+s.focus+' min focus then '+s.brk+' min break, again and again, until the hours are over.</div>'+
+      '<button class="btn primary big" data-act="start">Start focus</button></div></div>'+
+      '<div class="card"><h3>Focus sounds</h3><div class="seg" id="sounds">'+sounds.map(function(x){return '<button data-act="sound" data-s="'+x[0]+'" aria-pressed="'+(s.sound===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>'+
+      '<label class="f" style="margin-top:12px">Volume<input type="range" id="vol" min="0" max="1" step="0.05" value="'+s.vol+'"></label></div>'+
+      '<button class="btn" data-act="fs">Full-screen focus mode</button>';
+  }
+  var isF=run.phase==='focus',isB=run.phase==='break',h='';
+  if(warn)h+='<div class="warnbar" role="alert">'+esc(warn)+'</div>';
+  if(run.phase==='ready'){
+    return h+'<div class="card"><h2>Your break has ended</h2><p>Start focus hour '+(run.cycle+1)+'?</p><div class="row"><button class="btn primary big" data-act="nextYes">Yes, start</button><button class="btn big" data-act="nextNo">No, finish</button></div></div>'+
+      '<div class="card"><h3>Today</h3><p style="margin:0">'+run.cycle+' focus hour'+(run.cycle>1?'s':'')+' done this run. +'+(run.cycle*s.focus)+' XP.</p></div>';
+  }
+  var dash=753.98;
+  h+='<div class="card" style="text-align:center"><div class="phase '+(isF?'focus':'break')+'">'+(isF?'Focus · hour '+run.cycle:'Break')+'</div>'+
+    '<div class="ringwrap"><svg viewBox="0 0 260 260"><circle cx="130" cy="130" r="120" fill="none" stroke="var(--soft)" stroke-width="12"/>'+
+    '<circle id="ringfg" cx="130" cy="130" r="120" fill="none" stroke="'+(isF?'var(--accent)':'var(--break)')+'" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+dash+'" style="stroke-dashoffset:0"/></svg>'+
+    '<div class="mid"><div id="clock">'+fmt(left())+'</div><div class="muted" style="font-size:14px;overflow-wrap:anywhere">'+esc(run.subject)+'</div></div></div>'+
+    '<div class="muted" style="margin-bottom:10px">Whole session ends at '+clockStr(run.windowEnd)+(s.strict?'. Strict mode is on.':'')+'</div>'+
+    '<div class="row" style="justify-content:center">'+
+    (s.strict?'':(run.paused?'<button class="btn primary" data-act="resume">Resume</button>':'<button class="btn" data-act="pause">Pause</button>'))+
+    (isF?'<button class="btn danger" data-act="exitAsk">Emergency exit</button>':(s.strict?'':'<button class="btn" data-act="skipBreak">End break</button>'))+'</div></div>';
+  if(isF){
+    h+='<div class="card"><h3>Focus shield on</h3><p style="margin:0 0 10px">Stay here. Anything below is off limits until the break.</p><div class="shield">'+
+      s.apps.concat(s.sites).map(function(a){return '<span class="chip off">'+esc(a)+'</span>'}).join('')+'</div>'+
+      '<p class="muted" style="font-size:13px;margin:10px 0 0">Times you left this page: <b>'+run.leaves+'</b>. This web app warns you but cannot lock other apps. See Settings for phone Focus mode.</p></div>';
+  }else{
+    h+='<div class="card"><h3>Break</h3><p style="margin:0 0 10px">All apps are open. Stretch, drink water, rest your eyes.</p><div class="shield">'+s.apps.concat(s.sites).map(function(a){return '<span class="chip">'+esc(a)+'</span>'}).join('')+'</div></div>'+
+      '<div class="card"><h3>Focus journal</h3><textarea id="jtext" rows="2" placeholder="What did you finish this hour?"></textarea><div style="margin-top:8px"><button class="btn sm" data-act="saveJ">Save note</button></div></div>';
+  }
+  return h;
+}
+function planView(){
+  var h='<div class="card"><h2>Schedule</h2><p class="muted" style="margin-top:0">Set each slot once. It repeats every day. Slots cannot overlap. A few minutes before the start the app speaks a reminder. At the start it asks Yes or No, then runs focus and breaks until the end time.</p><div class="list">';
+  if(!S.schedule.length)h+='<div class="muted">No sessions yet.</div>';
+  S.schedule.slice().sort(function(a,b){return mins(a.time)-mins(b.time)}).forEach(function(it){
+    h+='<div class="item"><div class="grow"><b>'+esc(it.title)+'</b><div class="muted">'+t12(it.time)+' to '+t12(it.end)+' · '+durText(it)+' · '+(it.days==='daily'?'every day':'weekdays')+'</div></div><button class="btn sm" data-act="delSched" data-id="'+it.id+'" aria-label="Delete">Remove</button></div>'});
+  h+='</div><div class="row" style="margin-top:12px"><label class="f grow">Title<input id="sTitle" placeholder="Study: DSA"></label><label class="f">Start<input id="sTime" type="time" value="09:00"></label><label class="f">End<input id="sEnd" type="time" value="12:00"></label>'+
+    '<label class="f">Repeat<select id="sDays"><option value="daily">Every day</option><option value="weekdays">Weekdays</option></select></label></div><div style="margin-top:10px"><button class="btn primary" data-act="addSched">Add session</button></div></div>';
+  var done=S.tasks.filter(function(t){return t.done}).length;
+  h+='<div class="card"><h2>Tasks and goals</h2><div class="row sp"><span class="muted">'+done+' of '+S.tasks.length+' done</span></div><div class="list">';
+  var order={high:0,med:1,low:2};
+  S.tasks.slice().sort(function(a,b){return (a.done-b.done)||(order[a.pri]-order[b.pri])}).forEach(function(t){
+    h+='<div class="item'+(t.done?' done':'')+'"><input type="checkbox" data-act="toggleTask" data-id="'+t.id+'" '+(t.done?'checked':'')+' aria-label="Done"><div class="grow t"><span class="t">'+esc(t.title)+'</span><div class="muted" style="font-size:13px">'+(t.due?'Due '+esc(t.due)+' · ':'')+t.mins+' min focused</div></div><span class="pill '+t.pri+'">'+t.pri+'</span><button class="btn sm" data-act="delTask" data-id="'+t.id+'">Remove</button></div>'});
+  h+='</div><div class="row" style="margin-top:12px"><label class="f grow">New task<input id="tTitle" maxlength="90"></label><label class="f">Priority<select id="tPri"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select></label><label class="f">Due<input id="tDue" type="date"></label></div>'+
+    '<div style="margin-top:10px"><button class="btn primary" data-act="addTask">Add task</button></div></div>';
+  var tk=dayKey();
+  h+='<div class="card"><h2>Habits</h2><div class="list">';
+  S.habits.forEach(function(x){
+    var n=0,d=new Date();if(!x.log[dayKey(d)])d.setDate(d.getDate()-1);while(x.log[dayKey(d)]){n++;d.setDate(d.getDate()-1)}
+    h+='<div class="item"><input type="checkbox" data-act="toggleHabit" data-id="'+x.id+'" '+(x.log[tk]?'checked':'')+' aria-label="Done today"><div class="grow"><b>'+esc(x.name)+'</b></div><span class="pill">'+n+' day'+(n===1?'':'s')+'</span><button class="btn sm" data-act="delHabit" data-id="'+x.id+'">Remove</button></div>'});
+  h+='</div><div class="row" style="margin-top:12px"><label class="f grow">New habit<input id="hName" maxlength="60"></label><button class="btn primary" data-act="addHabit" style="align-self:flex-end">Add</button></div></div>';
+  return h;
+}
+function statsView(){
+  var tot=totalMin(),cnt=S.sessions.length,done=S.tasks.filter(function(t){return t.done}).length,rate=S.tasks.length?Math.round(done/S.tasks.length*100):0;
+  var days=[],i,d,names=['S','M','T','W','T','F','S'];
+  for(i=6;i>=0;i--){d=new Date();d.setDate(d.getDate()-i);days.push({k:dayKey(d),l:names[d.getDay()],v:focusMinOn(dayKey(d))})}
+  var max=Math.max.apply(null,days.map(function(x){return x.v}).concat([60])),wk=days.reduce(function(a,x){return a+x.v},0);
+  var svg='<svg viewBox="0 0 320 150" width="100%" role="img" aria-label="Focus minutes per day this week"><line x1="8" y1="118" x2="312" y2="118" stroke="var(--line)"/>';
+  days.forEach(function(x,j){var bh=Math.round(x.v/max*90),bx=14+j*44;
+    svg+='<rect x="'+bx+'" y="'+(118-bh)+'" width="30" height="'+bh+'" rx="4" fill="'+(j===6?'var(--accent)':'var(--soft)')+'" stroke="var(--accent)" stroke-width="'+(j===6?0:1)+'"/>'+
+      '<text x="'+(bx+15)+'" y="'+(112-bh)+'" text-anchor="middle">'+(x.v?x.v+'m':'')+'</text><text x="'+(bx+15)+'" y="136" text-anchor="middle">'+x.l+'</text>'});
+  svg+='</svg>';
+  var hrs=[];for(i=0;i<24;i++)hrs.push(0);
+  S.sessions.forEach(function(s){var st=new Date(s.t-s.min*60000);hrs[st.getHours()]+=s.min});
+  var hm=Math.max.apply(null,hrs),best=hm?hrs.indexOf(hm):-1;
+  var hs='<svg viewBox="0 0 320 80" width="100%" role="img" aria-label="Focus minutes by start hour"><line x1="8" y1="58" x2="312" y2="58" stroke="var(--line)"/>';
+  hrs.forEach(function(v,j){var bh=hm?Math.round(v/hm*44):0;hs+='<rect x="'+(10+j*12.6).toFixed(1)+'" y="'+(58-bh)+'" width="9" height="'+Math.max(bh,1)+'" rx="2" fill="'+(j===best?'var(--accent)':'var(--soft)')+'"/>'});
+  [0,6,12,18,23].forEach(function(j){hs+='<text x="'+(14+j*12.6).toFixed(1)+'" y="74" text-anchor="middle">'+j+'h</text>'});
+  hs+='</svg>';
+  var h='<div class="grid2"><div class="card stat"><b>'+(tot/60).toFixed(1)+'h</b><span>total focused</span></div><div class="card stat"><b>'+cnt+'</b><span>sessions completed</span></div><div class="card stat"><b>'+streak()+'</b><span>day streak</span></div><div class="card stat"><b>'+rate+'%</b><span>task completion</span></div></div>';
+  h+='<div class="card"><div class="row sp"><h3 style="margin:0">Last 7 days</h3><span class="muted">'+(wk/60).toFixed(1)+' h this week</span></div>'+svg+'</div>';
+  h+='<div class="card"><div class="row sp"><h3 style="margin:0">Most productive hour</h3><b>'+(best>=0?pad(best)+':00':'No data yet')+'</b></div>'+hs+'</div>';
+  var nx=300-(S.xp%300);
+  h+='<div class="card"><div class="row sp"><h3 style="margin:0">Level '+level()+'</h3><span class="muted">'+nx+' XP to next</span></div><div class="bar" style="margin-top:8px"><i style="width:'+Math.round((S.xp%300)/3)+'%"></i></div><p class="muted" style="font-size:13px;margin:8px 0 0">1 XP for every focused minute.</p></div>';
+  h+='<div class="card"><h3>Badges</h3>'+badgeList().map(function(b){return '<div class="badge '+(b[4]?'on':'')+'"><span class="dot">'+b[2]+'</span><div><b>'+b[1]+'</b><div class="muted" style="font-size:13px">'+b[3]+'</div></div></div>'}).join('')+'</div>';
+  h+='<div class="card"><h3>Focus journal</h3>'+(S.journal.length?'<div class="list">'+S.journal.slice(-6).reverse().map(function(j){return '<div class="item"><div class="grow">'+esc(j.text)+'<div class="muted" style="font-size:13px">'+esc(j.subject)+' · '+new Date(j.t).toLocaleDateString()+'</div></div></div>'}).join('')+'</div>':'<div class="muted">Notes you save during breaks show up here.</div>')+'</div>';
+  return h;
+}
+function chips(arr,kind){return arr.map(function(a,i){return '<span class="chip">'+esc(a)+'<button data-act="delBlock" data-k="'+kind+'" data-i="'+i+'" aria-label="Remove '+esc(a)+'">×</button></span>'}).join('')}
+function settingsView(){
+  var s=S.settings,np=('Notification' in window)?Notification.permission:'unsupported';
+  return '<div class="card"><h2>Timer</h2><div class="grid2"><label class="f">Focus minutes<input id="setFocus" type="number" min="1" max="180" value="'+s.focus+'"></label><label class="f">Break minutes<input id="setBrk" type="number" min="1" max="60" value="'+s.brk+'"></label><label class="f">Daily goal (minutes)<input id="setGoal" type="number" min="15" max="960" step="15" value="'+s.goal+'"></label><label class="f">Reminder before start (minutes, 0 = off)<input id="setLead" type="number" min="0" max="60" value="'+s.lead+'"></label></div>'+
+    '<p class="muted" style="font-size:13px">Tip: set focus to 1 minute to test the whole flow quickly.</p><button class="btn primary" data-act="saveTimer">Save timer</button></div>'+
+    '<div class="card"><h2>Alerts</h2><div class="list"><label class="item"><input type="checkbox" id="setVoice" data-act="setting" data-k="voice" '+(s.voice?'checked':'')+'><span class="grow">Speak "break started" and "break ended"</span><button class="btn sm" data-act="testVoice">Test</button></label>'+
+    '<label class="item"><input type="checkbox" data-act="setting" data-k="notify" '+(s.notify?'checked':'')+'><span class="grow">Show notifications</span></label>'+
+    '<label class="item"><input type="checkbox" data-act="setting" data-k="strict" '+(s.strict?'checked':'')+(run?' disabled':'')+'><span class="grow">Strict mode: no pause and no stop button until the end time. Emergency exit needs typing EXIT.</span></label>'+
+    '<div class="item"><span class="grow muted">Notification permission: '+np+'</span>'+(np==='default'?'<button class="btn sm" data-act="askNotif">Allow</button>':'')+'</div></div></div>'+
+    '<div class="card"><h2>Distraction blocking</h2><h3>Apps</h3><div class="shield">'+chips(s.apps,'apps')+'</div><div class="row" style="margin:8px 0 14px"><input id="addApp" class="grow" placeholder="Add an app"><button class="btn" data-act="addBlock" data-k="apps">Add</button></div>'+
+    '<h3>Websites</h3><div class="shield">'+chips(s.sites,'sites')+'</div><div class="row" style="margin-top:8px"><input id="addSite" class="grow" placeholder="Add a website"><button class="btn" data-act="addBlock" data-k="sites">Add</button></div></div>'+
+    '<div class="card"><h2>Make blocking real</h2><p style="margin-top:0">A web page cannot lock other apps. These lists show your shield and trigger warnings when you leave this page. To truly block, turn on your phone at the same moment:</p>'+
+    '<ul style="padding-left:20px;margin:0"><li><b>Android:</b> Digital Wellbeing, Focus mode, pick your distracting apps, Turn on now.</li><li><b>iPhone:</b> Settings, Focus, Do Not Disturb or Work, choose allowed apps.</li><li><b>Websites on a computer:</b> use a blocker extension such as BlockSite or Cold Turkey.</li></ul>'+
+    '<p class="muted" style="font-size:13px;margin-bottom:0">A packaged Android app (APK) could use accessibility permission to block apps. That is a separate build.</p></div>'+
+    '<div class="card"><h2>Privacy</h2><div class="list"><label class="item"><input type="checkbox" data-act="setting" data-k="keep" '+(s.keep?'checked':'')+'><span class="grow">Save my session history on this device</span></label></div>'+
+    '<p class="muted" style="font-size:13px">Everything stays in this browser. Nothing is uploaded.</p><button class="btn danger" data-act="clearAsk">Delete all my data</button></div>';
+}
+function render(){
+  $('#nav').innerHTML=TABS.map(function(t){return '<button data-act="tab" data-t="'+t[0]+'" '+(tab===t[0]?'aria-current="true"':'')+'>'+t[1]+'</button>'}).join('');
+  var v={home:homeView,focus:focusView,plan:planView,stats:statsView,settings:settingsView}[tab]();
+  var keep={},act=document.activeElement;
+  $('#view').innerHTML=v;
+  $('#date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  var th=S.settings.theme;$('#themeBtn').textContent='Theme: '+th;
+  tick();
+}
+function applyTheme(){var t=S.settings.theme;if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t)}
+
+/* ---------- actions ---------- */
+function val(id){var e=$('#'+id);return e?e.value.trim():''}
+function removeById(arr,id){for(var i=0;i<arr.length;i++)if(String(arr[i].id)===String(id)){arr.splice(i,1);return}}
+var actions={
+  tab:function(d){tab=d.t;render();window.scrollTo(0,0)},
+  theme:function(){var o=['auto','light','dark'];S.settings.theme=o[(o.indexOf(S.settings.theme)+1)%3];applyTheme();save();render()},
+  start:function(){var sel=$('#taskSel'),id=sel&&sel.value?+sel.value:null,sub=val('subj'),hrs=Math.min(16,Math.max(1,parseInt(val('hrs'),10)||1));
+    if(!sub&&id){var t=S.tasks.filter(function(x){return x.id===id})[0];sub=t?t.title:''}
+    ctx();startFocus(sub||'Focus',id,1,Date.now()+hrs*3600000)},
+  quick:function(){ctx();startFocus('Quick focus',null,1,Date.now()+S.settings.focus*60000)},
+  pause:function(){run.left=run.endAt-Date.now();run.paused=true;render()},
+  resume:function(){run.endAt=Date.now()+run.left;run.paused=false;render()},
+  exitAsk:function(){
+    if(S.settings.strict)modal('<h2>Emergency exit</h2><p>Strict mode is on. To end the whole session before its end time, type EXIT.</p><input id="exitTxt" placeholder="Type EXIT" autocomplete="off" style="width:100%"><div class="row" style="margin-top:10px"><button class="btn primary" data-act="closeModal">Stay focused</button><button class="btn danger" data-act="exitYes">End session</button></div>');
+    else modal('<h2>Leave this session?</h2><p>This counts as an early exit.</p><div class="row"><button class="btn primary" data-act="closeModal">Stay focused</button><button class="btn danger" data-act="exitYes">Leave session</button></div>')},
+  exitYes:function(){
+    if(S.settings.strict&&val('exitTxt').toUpperCase()!=='EXIT'){toast('Not ended. Type the word EXIT.');return}
+    S.exits.push(Date.now());save();closeModal();endRun();toast('Session ended early')},
+  closeModal:function(){closeModal()},
+  skipBreak:function(){if(run&&run.phase==='break')startFocus(run.subject,run.taskId,run.cycle+1,run.windowEnd,'Break ended. ')},
+  nextYes:function(){var c=run.cycle+1,sub=run.subject,id=run.taskId;startFocus(sub,id,c)},
+  nextNo:function(){endRun()},
+  promptYes:function(){var p=pend;closeModal();if(p&&!run){ctx();startFocus(p.title,null,1,p.end)}},
+  promptType:function(){var v=val('ans').toLowerCase();if(['yes','y','yeah','ya','haan','han','ha','ok','okay','start','sure'].indexOf(v)>=0)actions.promptYes();else{closeModal();toast('Okay, the timer stays off.')}},
+  promptNo:function(){closeModal();toast('Okay, the timer stays off.')},
+  startSched:function(d){var it=S.schedule.filter(function(x){return String(x.id)===d.id})[0];ctx();if(it)startFocus(it.title,null,1,Date.now()+durMin(it)*60000)},
+  addSched:function(){
+    var t=val('sTitle'),st=val('sTime'),en=val('sEnd');
+    if(!t){toast('Add a title first');return}
+    if(!st||!en){toast('Set both a start and an end time');return}
+    if(st===en){toast('End time must be different from the start time');return}
+    var clash=S.schedule.filter(function(x){return overlap({time:st,end:en},x)})[0];
+    if(clash){toast('Overlaps with "'+clash.title+'" ('+t12(clash.time)+' to '+t12(clash.end)+'). Change the times.');return}
+    S.schedule.push({id:uid(),title:t,time:st,end:en,days:val('sDays')||'daily',last:'',pre:''});save();render()},
+  delSched:function(d){removeById(S.schedule,d.id);save();render()},
+  addTask:function(){var t=val('tTitle');if(!t){toast('Add a task title first');return}S.tasks.push({id:uid(),title:t,pri:val('tPri')||'med',due:val('tDue'),done:false,mins:0});save();render()},
+  toggleTask:function(d){var t=S.tasks.filter(function(x){return String(x.id)===d.id})[0];if(t){t.done=!t.done;if(t.done){S.xp+=10;checkBadges()}save();render()}},
+  delTask:function(d){removeById(S.tasks,d.id);save();render()},
+  addHabit:function(){var n=val('hName');if(!n)return;S.habits.push({id:uid(),name:n,log:{}});save();render()},
+  toggleHabit:function(d){var h=S.habits.filter(function(x){return String(x.id)===d.id})[0],k=dayKey();if(h){if(h.log[k])delete h.log[k];else h.log[k]=1;save();render()}},
+  delHabit:function(d){removeById(S.habits,d.id);save();render()},
+  sound:function(d){ctx();setSound(d.s);render()},
+  fs:function(){var e=document.documentElement;try{var p=e.requestFullscreen&&e.requestFullscreen();if(p&&p.catch)p.catch(function(){toast('Full screen is not available here')})}catch(x){toast('Full screen is not available here')}},
+  saveJ:function(){var t=val('jtext');if(!t)return;S.journal.push({t:Date.now(),text:t,subject:run?run.subject:''});save();$('#jtext').value='';toast('Saved to your journal')},
+  applyRec:function(d){S.settings.focus=+d.m;save();render();toast('Focus length set to '+d.m+' min')},
+  saveTimer:function(){var f=+val('setFocus'),b=+val('setBrk'),g=+val('setGoal'),ld=parseInt(val('setLead'),10);
+    if(f>=1&&f<=180)S.settings.focus=Math.round(f);if(b>=1&&b<=60)S.settings.brk=Math.round(b);if(g>=15)S.settings.goal=Math.round(g);if(ld>=0&&ld<=60)S.settings.lead=ld;save();toast('Timer saved')},
+  setting:function(d,el){S.settings[d.k]=el.checked;save()},
+  testVoice:function(){speak('Your break has started.')},
+  askNotif:function(){try{Notification.requestPermission().then(render)}catch(e){}},
+  addBlock:function(d){var id=d.k==='apps'?'addApp':'addSite',v=val(id);if(!v)return;S.settings[d.k].push(v);save();render()},
+  delBlock:function(d){S.settings[d.k].splice(+d.i,1);save();render()},
+  clearAsk:function(){modal('<h2>Delete all data?</h2><p>This removes your sessions, tasks, habits, journal and settings from this device.</p><div class="row"><button class="btn primary" data-act="closeModal">Keep my data</button><button class="btn danger" data-act="clearYes">Delete everything</button></div>')},
+  clearYes:function(){try{localStorage.removeItem(K)}catch(e){}S=defaults();stopSound();run=null;applyTheme();closeModal();render();toast('All data deleted')}
+};
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b||b.type==='checkbox')return;
+  var f=actions[b.dataset.act];if(f)f(b.dataset,b);
+});
+document.addEventListener('change',function(e){
+  var b=e.target.closest('[data-act]');if(b&&b.type==='checkbox'){var f=actions[b.dataset.act];if(f)f(b.dataset,b)}
+});
+document.addEventListener('input',function(e){
+  if(e.target.id==='vol'){S.settings.vol=+e.target.value;if(master)master.gain.value=S.settings.vol;save()}
+});
+
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target&&e.target.id==='ans')actions.promptType()});
+/* leaving the session */
+document.addEventListener('visibilitychange',function(){
+  if(!run||run.phase!=='focus'||run.paused)return;
+  if(document.hidden){run.leftAt=Date.now();run.leaves++}
+  else if(run.leftAt){run.leftAt=0;warn='You left your focus session. Come back and keep going.';speak('You left your focus session. Stay with it.');render()}
+});
+window.addEventListener('beforeunload',function(e){if(run&&run.phase==='focus'){e.preventDefault();e.returnValue=''}});
+
+applyTheme();render();setTimeout(checkSchedule,1500);
+})();
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
+</body>
+</html>
